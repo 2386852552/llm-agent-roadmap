@@ -1,20 +1,20 @@
 from dotenv import load_dotenv
 import os
-from rich import print
+from openai import OpenAI
 
 load_dotenv()
 
-model_id = os.getenv("LLM_MODEL_ID")
-api_key = os.getenv("LLM_API_KEY")
-base_url = os.getenv("LLM_BASE_URL")
+client = OpenAI(
+    api_key=os.getenv("LLM_API_KEY"),
+    base_url=os.getenv("LLM_BASE_URL"),
+)
 
-print("[bold green]环境加载成功！[/bold green]")
+response = client.chat.completions.create(
+    model=os.getenv("LLM_MODEL_ID"),
+    messages=[
+        {"role": "system", "content": "你是一个友好、专业的智能助手。"},
+        {"role": "user", "content": "请用一句话介绍什么是大模型。"}
+    ]
+)
 
-print(f"Model: {model_id}")
-
-if api_key:
-    print(f"API Key 已读取: {api_key[:8]}...")
-else:
-    print("未检测到 API Key")
-
-print(f"Base URL: {base_url}")
+print(response.choices[0].message.content)
