@@ -1,0 +1,4 @@
+Python 是一种高级编程语言，具有简洁、易读的特点。
+它支持面向对象、函数式和过程式编程。
+在人工智能领域，Python 因为拥有丰富的生态系统而被广泛使用。
+常见的库包括 NumPy、Pandas、PyTorch 和 Transformers。
