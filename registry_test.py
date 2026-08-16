@@ -1,21 +1,22 @@
-def add(a,b):
-    return a+b
+from tools import calculator, multiply, get_current_time, string_length
 
-def multiply(a,b):
-    return a*b
-
-tool_registry = {
-    "add": add,
+tools_registry = {
+    "calculator": calculator,
     "multiply": multiply,
+    "get_current_time": get_current_time,
+    "string_length": string_length,
 }
 
-print(tool_registry["add"](2,3))
-print(tool_registry["multiply"](4,5))
+def execute_tool(tool_name, arguments):
+    tool = tools_registry.get(tool_name)
 
-tool_name = "add"
+    if tool is None:
+        return f"工具 {tool_name} 不存在"
 
-tool = tool_registry[tool_name]
+    return tool(**arguments)
 
-result = tool(100, 200)
-
-print(result)
+print(execute_tool("calculator", {"a": 10, "b": 20}))
+print(execute_tool("multiply", {"a": 6, "b": 7}))
+print(execute_tool("get_current_time", {}))
+print(execute_tool("unknown", {}))
+print(execute_tool("string_length", {"text": "hello"}))
