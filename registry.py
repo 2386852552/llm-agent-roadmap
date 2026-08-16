@@ -90,7 +90,7 @@ def build_tool_definitions():
     return definitions
 
 def execute_tool(tool_name, arguments):
-    tool = tool_registry.get(tool_name)
+    tool = tool_registry.get(tool_name)#获取tool_name对应的函数（字典的值）赋值给tool，tool即成为可以执行功能的函数工具。
 
     if tool is None:
         return f"未知工具：{tool_name}"
