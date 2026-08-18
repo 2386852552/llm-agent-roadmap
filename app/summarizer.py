@@ -10,8 +10,10 @@ summarizer.py
 
 这些事情分别由其他模块负责。
 """
-
+import json
 from app.llm import LLMClient
+from app.models import SummaryResult
+from pydantic import ValidationError
 
 def build_summary_prompt(text: str) -> str:
     """
@@ -19,24 +21,58 @@ def build_summary_prompt(text: str) -> str:
     """
 
     return f"""
-    你是一个专业的学习助手。
+你是一个专业的学习助手。
 
-    请分析下面的学习笔记，并输出：
+请分析下面的学习笔记。
 
-    1.简介摘要
-    2.5 个关键词
-    3.3 个适合复习的问题
+你必须严格返回 JSON，
+不要返回 Markdown，
+不要添加 JSON 之外的文字。
 
-    请使用 Markdown 格式输出。
+JSON 格式必须是：
 
-    学习笔记：
-    {text}
-    """.strip()
+{{
+    "title": "总结标题",
+    "summary": "内容摘要",
+    "keywords": ["关键词1", "关键词2", "关键词3"],
+    "questions": ["复习问题1", "复习问题2", "复习问题3"]
+}}
 
-def summarize_text(text: str, llm_client: LLMClient) -> str:
+字段要求：
+
+- title: 字符串
+- summary: 字符串
+- keywords: 字符串列表
+- questions: 字符串列表
+
+学习笔记：
+
+{text}
+""".strip()
+
+def parse_summary_result(raw_text: str) -> SummaryResult:
+    """
+    解析 LLM 返回的 JSON 字符串为 SummaryResult。
+    """
+
+    try:
+        data = json.loads(raw_text)
+    except json.JSONDecodeError as e:
+        raise ValidationError("模型返回内容不是合法 JSON") from e
+
+    try:
+        return SummaryResult.model_validate(data)
+    except ValidationError as e:
+        raise ValidationError("模型返回内容格式错误") from e
+
+
+
+
+def summarize_text(text: str, llm_client: LLMClient) -> SummaryResult:
     """
     调用 LLM 对文本进行总结。
     """
 
     prompt = build_summary_prompt(text)
-    return llm_client.generate(prompt)
+    raw_text = llm_client.generate(prompt)
+    return parse_summary_result(raw_text)

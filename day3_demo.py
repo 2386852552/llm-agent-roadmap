@@ -5,7 +5,7 @@ Day 3 的入口程序。
 """
 
 from pathlib import Path
-
+import textwrap
 from app.llm import LLMClient
 from app.logger import get_logger
 from app.summarizer import summarize_text
@@ -36,11 +36,30 @@ def main() -> None:
         logger.info("正在调用 Qwen")
         print("正在调用 Qwen，请稍候...")
 
-        summary = summarize_text(text, llm)
+        result = summarize_text(text, llm)
 
         logger.info("Qwen 返回成功")
 
-        write_text_file(output_file, summary)
+        questions = "\n".join(
+            f"- {question}"
+            for question in result.questions
+        )
+
+        markdown = f"""# {result.title}
+
+        ## 摘要
+
+        {result.summary}
+
+        ## 关键词
+
+        {", ".join(result.keywords)}
+
+        ## 复习问题
+
+        {questions}
+        """
+        write_text_file(output_file, markdown)
 
         logger.info(f"结果已保存：{output_file}")
         print(f"总结完成，结果已保存到：{output_file}")
