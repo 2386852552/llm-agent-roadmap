@@ -27,17 +27,15 @@ client = OpenAI(
 
 tool_definitions = build_tool_definitions()
 
-def run_agent(user_input):
-
+def run_agent(user_input,max_iterations=5):
     messages = [
         {
             "role": "user",
             "content": user_input,
         }
     ]
-
-    while True:
-
+    for iteration in range(max_iterations):
+        print(f"\n--- Iteration {iteration+1}")
         response = client.chat.completions.create(
             model=MODEL,
             messages=messages,
@@ -74,6 +72,7 @@ def run_agent(user_input):
                 "tool_call_id": tool_call.id,
                 "content": str(result),
             })
+        raise RuntimeError("Agent 达到最大迭代次数，停止执行。")
 
 def main():
 
