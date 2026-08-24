@@ -29,6 +29,45 @@ client = OpenAI(
 
 tool_definitions = build_tool_definitions()
 
+def print_state(messages):
+    print("\n[Agent State]")
+    for index,message in enumerate(messages):
+        role = message.get("role")
+        print(f"  [{index}] role={role}")
+        if role =="user":
+            print(f"  content={message.get('content')}")
+        
+        elif role == "assistant":
+            content = message.get("content")
+            if content:
+                print(f"  content={content}")
+                tool_calls = message.get("tool_calls")
+                if tool_calls:
+                    for tool_call in tool_calls:
+                        function = tool_call.get("function", {})
+
+                        tool_name = function.get("name")
+
+                        arguments = function.get("arguments")
+                        
+                        print(
+                            f"      tool_call={tool_name}"
+                        )
+
+                        print(
+                            f"      arguments={arguments}"
+                        )
+        
+        elif role == "tool":
+            print(
+                f"   tool_call_id="
+                f"{message.get('tool_call_id')}"
+            )
+            print(
+                f"   content="
+                f"{message.get('content')}"
+            )
+
 def run_agent(user_input,max_iterations=5):
     messages = [
         {
@@ -39,7 +78,7 @@ def run_agent(user_input,max_iterations=5):
 
     for iteration in range(max_iterations):
         print(f"\n--- Iteration {iteration+1}")
-
+        print_state(messages)
         response = client.chat.completions.create(
             model=MODEL,
             messages=messages,
@@ -49,9 +88,15 @@ def run_agent(user_input,max_iterations=5):
         message = response.choices[0].message
 
         if not message.tool_calls:
+            print("\n[Final Answer]")
+            print(message.content)
             return message.content
+        
+        assistant_message = message.model_dump(
+            exclude_none=True
+        )
 
-        messages.append(message)
+        messages.append(assistant_message)
 
         for tool_call in message.tool_calls:
             tool_name = tool_call.function.name
@@ -59,16 +104,17 @@ def run_agent(user_input,max_iterations=5):
             arguments = json.loads(
                 tool_call.function.arguments
             )
-
-            print(f"\n[Tool Call] {tool_name}")
-            print(f"[Arguments] {arguments}")
+            print("\n[Tool Call]")
+            print(f"\nName: {tool_name}")
+            print(f"Arguments: {arguments}")
 
             result = execute_tool(
                 tool_name,
                 arguments,
             )
 
-            print(f"[Tool Result] {result}")
+            print(f"\n[Tool Result]")
+            print(result)
 
             messages.append(
                 {
